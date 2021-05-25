@@ -101,6 +101,7 @@
     <Compile Include="Services\PresenceDataService.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Services\ProxyService.cs" />
     <Compile Include="WebAppServer\MainStandbySyncServer.cs" />
     <Compile Include="Services\PabxItfService.cs" />
     <Compile Include="Procesos\BaseCode.cs" />
