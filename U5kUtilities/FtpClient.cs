@@ -10,7 +10,7 @@ using System.Runtime.Remoting.Messaging;
 namespace Utilities
 {
 
-    public class FtpClient
+    public class FtpClient : IDisposable
     {
         private string host = null;
         private string user = null;
@@ -19,12 +19,18 @@ namespace Utilities
         private FtpWebResponse ftpResponse = null;
         private Stream ftpStream = null;
         private int bufferSize = 2048;
+        private int Timeout { get; set; }
 
         /* Construct Object */
-        public FtpClient(string hostIP, string userName, string password)
+        public FtpClient(string hostIP, string userName, string password, int timeout=10000)
         {
             host = hostIP; user = userName; pass = password;
+            Timeout = timeout;
         }
+
+        /* IDisposable */
+        public void Dispose() { }
+
         /* Download File */
         protected void Download(string remoteFile, Stream localFileStream, Action<bool,Exception> respond)
         {
@@ -42,6 +48,7 @@ namespace Utilities
                 ftpRequest.Method = WebRequestMethods.Ftp.DownloadFile;
                 /* **/
                 ftpRequest.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+                ftpRequest.Timeout = Timeout;
 
                 /* Establish Return Communication with the FTP Server */
                 ftpResponse = (FtpWebResponse)ftpRequest.GetResponse();
@@ -65,19 +72,20 @@ namespace Utilities
                 {
                     throw ex;
                 }
-
-                /* Resource Cleanup */
-                localFileStream.Close();
-                ftpStream.Close();
-                ftpResponse.Close();
-                ftpRequest = null;
-
                 respond(true, null);
             }
             catch (Exception ex)
             {
                 // throw ex;
                 respond(false, ex);
+            }
+            finally
+            {
+                /* Resource Cleanup */
+                //localFileStream.Close();
+                ftpStream?.Close();
+                ftpResponse?.Close();
+                ftpRequest = null;
             }
             return;
         }
@@ -88,18 +96,25 @@ namespace Utilities
         /// <param name="localFile"></param>
         public void Download(string remoteFile, string localFile, Action<bool, Exception> respond)
         {
-            Download(remoteFile, new FileStream(localFile, FileMode.Create), respond);
+            using (var fs = new FileStream(localFile, FileMode.Create))
+            {
+                Download(remoteFile, fs, respond);
+            }
         }
         /// <summary>
         /// Lo salva en un 'string'
         /// </summary>
         /// <param name="remoteFile"></param>
         /// <param name="localstring"></param>
-        public void Download(string remoteFile, ref string localstring, Action<bool, Exception> respond)
+        public void Download(string remoteFile, Action<bool, string, Exception> respond)
         {
-            MemoryStream stream = new MemoryStream();
-            Download(remoteFile, stream, respond);
-            localstring = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+            using (var stream = new MemoryStream())
+            {
+                Download(remoteFile, stream, (res, x) =>
+                {
+                    respond(res, res ? System.Text.Encoding.UTF8.GetString(stream.ToArray()) : "", res ? null : x);
+                });
+            }
         }
         /* Upload File */
         public void Upload(string remoteFile, string localFile, Action<bool, Exception> respond)
