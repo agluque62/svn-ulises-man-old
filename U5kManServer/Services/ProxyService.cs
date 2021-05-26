@@ -32,6 +32,12 @@ namespace U5kManServer
             }
         }
 
+        public event EventHandler ProxyEvent;
+        public class ProxyEventArgs : EventArgs
+        {
+            public EventMessage Message { get; set; }
+        }
+
         TinyMessengerHub SystemEventHub { get; set; } = new TinyMessengerHub();
         public object Subscribe(Action<EventMessage> notify)
         {
@@ -44,6 +50,7 @@ namespace U5kManServer
         public void Publish(EventMessage msg)
         {
             SystemEventHub.Publish<EventMessage>(msg);
+            ProxyEvent?.Invoke(this, new ProxyEventArgs() { Message = msg });
         }
 
         #endregion
