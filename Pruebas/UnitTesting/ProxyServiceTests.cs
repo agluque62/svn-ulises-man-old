@@ -142,7 +142,7 @@ namespace UnitTesting
                 .Select(e => (2, e.EventArgs.Exception.Message));
             var PbxObservableMessage = Observable.FromEventPattern<MessageReceivedEventArgs>(h => PbxWebSocket.MessageReceived += h, h => PbxWebSocket.MessageReceived -= h)
                 .Select(e => (3, e.EventArgs.Message));
-            var PbxObservable = PbxObservableOpen.Merge(PbxObservableClose).Merge(PbxObservableError).Merge(PbxObservableMessage);
+            PbxObservable = PbxObservableOpen.Merge(PbxObservableClose).Merge(PbxObservableError).Merge(PbxObservableMessage);
             var subscription = PbxObservable.Subscribe(e =>
             {
                 switch (e.Item1)
@@ -170,5 +170,6 @@ namespace UnitTesting
 
             subscription.Dispose();
         }
+        IObservable<(int,string)> PbxObservable { get; set; }
     }
 }
