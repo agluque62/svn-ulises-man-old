@@ -171,5 +171,16 @@ namespace UnitTesting
             subscription.Dispose();
         }
         IObservable<(int,string)> PbxObservable { get; set; }
+        [TestMethod]
+        public void TimerObservableTest()
+        {
+            var timer = Observable.Interval(TimeSpan.FromSeconds(1));
+            var sub = timer.Subscribe((a) =>
+            {
+                Debug.WriteLine($"Tick => {a}");
+            });
+            Task.Delay(TimeSpan.FromSeconds(30)).Wait();
+            sub.Dispose();
+        }
     }
 }

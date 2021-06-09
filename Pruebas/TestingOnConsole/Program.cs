@@ -7,12 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 using WebSocket4Net;
+using TestingOnConsole.RxNetInAction;
 
 namespace TestingOnConsole
 {
     class Program
     {
-        static void Main(string[] args)
+        static void TestBkk()
         {
             Console.WriteLine($"Hello world!");
             var pbxUrl = $"ws://10.12.60.36:8080/pbx/ws?login_user=sa&login_password=sa&user=*&registered=True&line=*";
@@ -52,6 +53,17 @@ namespace TestingOnConsole
             Task.Delay(TimeSpan.FromSeconds(6)).Wait();
 
             subscription.Dispose();
+        }
+        static void Main(string[] args)
+        {
+            // TestBkk();
+            //RxNetInActionClass.Test();
+            //RxNetInActionClass.TestingObservablesFromAsync();
+            //RxNetInActionClass.TestingObservableCancelation();
+
+            RxNetInActionClass.TestingBasicSubjects();
+
+            Console.ReadLine();
         }
     }
 }
