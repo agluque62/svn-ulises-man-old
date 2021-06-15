@@ -234,7 +234,7 @@ namespace TestingOnConsole.RxNetInAction
                 return true;
             });
         }
-        public static void Test()
+        static void Test()
         {
             using (var ticker = new StockTicker())
             using (var monitor = new RxStockMonitor(ticker))
@@ -242,7 +242,7 @@ namespace TestingOnConsole.RxNetInAction
                 ticker.Run();
             }
         }
-        public static void TestingObservablesFromAsync()
+        static void TestingObservablesFromAsync()
         {
             int InitialNumber = 10000;
             int NumbersCount = 100;
@@ -282,7 +282,7 @@ namespace TestingOnConsole.RxNetInAction
             //System.Threading.ThreadPool.SetMinThreads(workerThreads, portThreads);
 
         }
-        public static void TestingObservableCancelation()
+        static void TestingObservableCancelation()
         {
             //var cts = new CancellationTokenSource();
             //cts.Token.Register(() => Console.WriteLine("Subscription canceled"));
@@ -295,8 +295,7 @@ namespace TestingOnConsole.RxNetInAction
             Task.Delay(TimeSpan.FromSeconds(10)).Wait();
             sun.Dispose();
         }
-
-        public static void TestingBasicSubjects()
+        static void TestingBasicSubjects()
         {
             Subject<string> sbj = new Subject<string>();
 
@@ -310,6 +309,50 @@ namespace TestingOnConsole.RxNetInAction
              .Subscribe(sbj);
 
             sbj.SubscribeConsole();
+        }
+
+        static void TestingCold2HotObservables()
+        {
+            //var coldObservable = Observable.Interval(TimeSpan.FromSeconds(1)).Take(5);
+            //var connectableObservable = coldObservable.Publish();
+
+            //connectableObservable.SubscribeConsole("First");
+            //connectableObservable.SubscribeConsole("Second");
+            //connectableObservable.Connect();
+            //Thread.Sleep(2000);
+            //connectableObservable.SubscribeConsole("Third");
+
+            //int I = 0;
+            //var numbers = Observable.Range(1, 5).Select(_ => I++);
+            //var zipped = numbers
+            // .Zip(numbers, (a, b) => a + b)
+            // .SubscribeConsole("zipped");
+            //var publishedZip = numbers.Publish(published =>
+            // published.Zip(published, (a, b) => a + b));
+            //publishedZip.SubscribeConsole("publishedZipped");
+
+            var publishedObservable = Observable.Interval(TimeSpan.FromSeconds(1))
+             .Do(x => Console.WriteLine("Generating {0}", x))
+             .Publish()
+             .RefCount();
+            var subscription1 = publishedObservable.SubscribeConsole("First");
+            var subscription2 = publishedObservable.SubscribeConsole("Second");
+            Thread.Sleep(3000);
+            subscription1.Dispose();
+            Thread.Sleep(3000);
+            subscription2.Dispose();
+
+            Thread.Sleep(3000);
+            subscription1 = publishedObservable.SubscribeConsole("Tirth");
+            Thread.Sleep(3000);
+            subscription1.Dispose();
+        }
+
+
+        public static void CurrentTest()
+        {
+            //TestingBasicSubjects();
+            TestingCold2HotObservables();
         }
     }
 }

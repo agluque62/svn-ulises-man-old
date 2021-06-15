@@ -56,13 +56,7 @@ namespace TestingOnConsole
         }
         static void Main(string[] args)
         {
-            // TestBkk();
-            //RxNetInActionClass.Test();
-            //RxNetInActionClass.TestingObservablesFromAsync();
-            //RxNetInActionClass.TestingObservableCancelation();
-
-            RxNetInActionClass.TestingBasicSubjects();
-
+            RxNetInActionClass.CurrentTest();
             Console.ReadLine();
         }
     }
