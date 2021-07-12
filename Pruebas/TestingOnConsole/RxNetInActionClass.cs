@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 
 namespace TestingOnConsole.RxNetInAction
 {
@@ -310,7 +312,6 @@ namespace TestingOnConsole.RxNetInAction
 
             sbj.SubscribeConsole();
         }
-
         static void TestingCold2HotObservables()
         {
             //var coldObservable = Observable.Interval(TimeSpan.FromSeconds(1)).Take(5);
@@ -347,12 +348,81 @@ namespace TestingOnConsole.RxNetInAction
             Thread.Sleep(3000);
             subscription1.Dispose();
         }
+        static void TestingCombObservables()
+        {
+            var server1 = Observable.Interval(TimeSpan.FromSeconds(2)).Select(i => "Server1-" + i);
+            var server2 = Observable.Interval(TimeSpan.FromSeconds(1)).Select(I => "Server2-" + I);
+            Observable.Amb(server1, server2)
+             .Take(3)
+             .SubscribeConsole("Amb");
+        }
+        static void TestingBuffering()
+        {
+            var server1 = Observable.Interval(TimeSpan.FromSeconds(2)).Select(i => "S-" + i).Take(10);
+            server1
+                .Buffer(3,2)
+                .Select(b => b.Aggregate((acu,item)=>$"{acu}, {item}"))
+                .SubscribeConsole("BUF");
+            server1
+                .Window(3)
+                .Select(b => b.Aggregate((acu, item) => $"{acu}, {item}"))
+                .SubscribeConsole("WIN");
+        }
+        static void TestingScheduling()
+        {
+            IScheduler scheduler = NewThreadScheduler.Default;
+            IDisposable scheduling =
+             scheduler.Schedule(
+             Unit.Default,
+             TimeSpan.FromSeconds(2),
+             (scdlr, _) =>
+             {
+                 Console.WriteLine("Hello World, Now: {0}", scdlr.Now);
+                 return Disposable.Empty;
+             });
 
-
+            Console.WriteLine("Before - Thread: {0}", Thread.CurrentThread.ManagedThreadId);
+            Observable.Interval(TimeSpan.FromSeconds(1), CurrentThreadScheduler.Instance)
+             .Take(3)
+             .Subscribe(x => Console.WriteLine("Inside - Thread: {1}", x, Thread.CurrentThread.ManagedThreadId));
+        }
+        public static void TimeDelayVariableObservable()
+        {
+            var observable = new[] { 4, 1, 2, 3 }.ToObservable();
+            observable
+             .Timestamp()
+             .Delay(x => Observable.Timer(TimeSpan.FromSeconds(x.Value)))
+             .Timestamp()
+             .SubscribeConsole("Delay");
+        }
         public static void CurrentTest()
         {
             //TestingBasicSubjects();
-            TestingCold2HotObservables();
+            //TestingCold2HotObservables();
+            //TestingCombObservables();
+            //TestingBuffering();
+            //TestingScheduling();
+
+            //TestScheduler("NewThreadScheduler", NewThreadScheduler.Default);
+            //TestScheduler("ThreadPoolScheduler", ThreadPoolScheduler.Instance);
+            //TestScheduler("TaskPoolScheduler", TaskPoolScheduler.Default);
+            //TestScheduler("CurrentThreadScheduler", CurrentThreadScheduler.Instance);
+            //TestScheduler("ImmediateScheduler", ImmediateScheduler.Instance);
+            //TestScheduler("EventLoopScheduler", new EventLoopScheduler());
+
+            TimeDelayVariableObservable();
+        }
+        public static void TestScheduler(string msg, IScheduler scheduler)
+        {
+            Console.WriteLine($"Testing Scheduler => {msg} on Thread {Thread.CurrentThread.ManagedThreadId}");
+            scheduler.Schedule(Unit.Default,
+            (s, _) => Console.WriteLine("Action1 - Thread:{0}",
+            Thread.CurrentThread.ManagedThreadId));
+            scheduler.Schedule(Unit.Default,
+            (s, _) => Console.WriteLine("Action2 - Thread:{0}",
+            Thread.CurrentThread.ManagedThreadId));
+            Task.Delay(200).Wait();
+
         }
     }
 }
