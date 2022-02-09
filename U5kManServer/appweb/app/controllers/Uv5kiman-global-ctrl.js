@@ -207,7 +207,7 @@ angular.module("Uv5kiman")
 
         ctrl.SoundImg = function () {
             var ret = $lserv.Sound() ? "images/speakeron.png" : "images/speakeroff.png";
-            console.log(ret);
+            //console.log(ret);
             return ret;
         };
 
@@ -252,8 +252,8 @@ angular.module("Uv5kiman")
                 }
                 else {
                     /** El servidor me devuelve errores... */
-                    console.log("Sesion Vencida...");
-                    window.location.href = "/login.html";
+                //    console.log("Sesion Vencida...");
+                //    window.location.href = "/login.html";
                 }
             }
                 , function (response) {
